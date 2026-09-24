@@ -128,10 +128,8 @@ logic arc_DOE_WRITE_DOE_DONE;
 //to remain in IDLE until next DOE_CMD is issued. To avoid other arcs moving the fsm
 //to other states, extending zeroize to a level so we can keep the fsm in IDLE. When the
 //next command is issued, this extended signal is reset and fsm advances.
-wire doe_sticky_reg_rst_b;
-assign doe_sticky_reg_rst_b = rst_b;
-always_ff @(posedge clk or negedge doe_sticky_reg_rst_b) begin
-    if (~doe_sticky_reg_rst_b) begin
+always_ff @(posedge clk or negedge rst_b) begin
+    if (~rst_b) begin
         zeroize_reg <= 0;
     end
     else if (zeroize) begin

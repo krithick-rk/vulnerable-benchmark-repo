@@ -200,7 +200,8 @@ impl<Env: ImageVerificationEnv> ImageVerifier<Env> {
     }
 
     fn effective_fuse_svn(&mut self) -> u32 {
-        if cfi_launder(self.env.anti_rollback_disable()) {
+        let is_arb_disabled = cfi_launder(self.env.anti_rollback_disable());
+        if is_arb_disabled {
             cfi_assert!(self.env.anti_rollback_disable());
             0_u32
         } else {

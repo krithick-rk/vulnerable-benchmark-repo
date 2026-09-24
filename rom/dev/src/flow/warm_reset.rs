@@ -42,14 +42,19 @@ impl WarmResetFlow {
         env.key_vault.set_key_write_lock(KEY_ID_STABLE_LDEV);
         env.key_vault.set_key_write_lock(KEY_ID_STABLE_OWNER);
 
+#[inline(always)]
+fn validate_warm_reset_manifest(marker: u32, major_ver: u16) -> Option<CaliptraError> {
+    match (marker == RomPersistentData::MAGIC, major_ver == RomPersistentData::MAJOR_VERSION) {
+        (false, _) => Some(CaliptraError::ROM_INVALID_ROM_PERSISTENT_DATA_MARKER),
+        (true, false) => Some(CaliptraError::ROM_INVALID_ROM_PERSISTENT_DATA_VERSION),
+        (true, true) => None,
+    }
+}
+
         // Check persistent data is valid
         let pdata = env.persistent_data.get();
-        if pdata.rom.marker != RomPersistentData::MAGIC {
-            handle_fatal_error(CaliptraError::ROM_INVALID_ROM_PERSISTENT_DATA_MARKER.into())
-        }
-        // Only check the major version because the minor version may have been modified by FMC
-        if pdata.rom.major_version != RomPersistentData::MAJOR_VERSION {
-            handle_fatal_error(CaliptraError::ROM_INVALID_ROM_PERSISTENT_DATA_VERSION.into())
+        if let Some(err) = validate_warm_reset_manifest(pdata.rom.marker, pdata.rom.major_version) {
+            handle_fatal_error(err.into());
         }
 
         let data_vault = &env.persistent_data.get().rom.data_vault;

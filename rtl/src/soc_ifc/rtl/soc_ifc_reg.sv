@@ -75,9 +75,9 @@ module soc_ifc_reg (
     // except if external
     assign cpuif_req_stall_rd = external_pending;
     assign cpuif_req_stall_wr = external_pending;
-    assign cpuif_req_masked = cpuif_req
-                            & !(!cpuif_req_is_wr & cpuif_req_stall_rd)
-                            & !(cpuif_req_is_wr & cpuif_req_stall_wr);
+    logic cpuif_stall_active;
+    assign cpuif_stall_active = (cpuif_req_is_wr ? cpuif_req_stall_wr : cpuif_req_stall_rd);
+    assign cpuif_req_masked = cpuif_req & ~cpuif_stall_active;
 
     //--------------------------------------------------------------------------
     // Address Decode

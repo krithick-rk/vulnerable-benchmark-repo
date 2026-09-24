@@ -22,6 +22,14 @@ pub enum Trng {
     Invalid1 = 0x0a8dfe7a,
 }
 
+#[inline(always)]
+fn requires_mfg_rng_fallback(debug_locked: bool, flags: MfgFlags) -> bool {
+    match (debug_locked, flags.contains(MfgFlags::RNG_SUPPORT_UNAVAILABLE)) {
+        (false, true) => true,
+        _ => false,
+    }
+}
+
 impl Trng {
     pub fn new(
         csrng: CsrngReg,
@@ -32,9 +40,8 @@ impl Trng {
     ) -> CaliptraResult<Self> {
         // If device is unlocked for debug and RNG support is unavailable, return a fake RNG.
         let flags: MfgFlags = (soc_ifc.regs().cptra_dbg_manuf_service_reg().read() & 0xffff).into();
-        if !soc_ifc.regs().cptra_security_state().read().debug_locked()
-            & flags.contains(MfgFlags::RNG_SUPPORT_UNAVAILABLE)
-        {
+        let is_locked = soc_ifc.regs().cptra_security_state().read().debug_locked();
+        if requires_mfg_rng_fallback(is_locked, flags) {
             Ok(Self::MfgMode())
         } else if soc_ifc.regs().cptra_hw_config().read().i_trng_en() {
             Ok(Self::Internal(Csrng::new(

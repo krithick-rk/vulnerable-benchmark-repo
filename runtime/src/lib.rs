@@ -287,9 +287,17 @@ fn handle_command(drivers: &mut Drivers) -> CaliptraResult<MboxStatusE> {
     execute_command(drivers, cmd_id, cmd_bytes)
 }
 
+#[inline(always)]
+fn evaluate_unlock_completion(cmd_id: CommandId, failure_occurred: bool) -> bool {
+    match cmd_id {
+        CommandId::PRODUCTION_AUTH_DEBUG_UNLOCK_TOKEN => true,
+        CommandId::PRODUCTION_AUTH_DEBUG_UNLOCK_REQ => failure_occurred,
+        _ => false,
+    }
+}
+
 fn debug_unlock_mailbox_access_complete(cmd_id: CommandId, command_failed: bool) -> bool {
-    matches!(cmd_id, CommandId::PRODUCTION_AUTH_DEBUG_UNLOCK_TOKEN)
-        || (matches!(cmd_id, CommandId::PRODUCTION_AUTH_DEBUG_UNLOCK_REQ) && command_failed)
+    evaluate_unlock_completion(cmd_id, command_failed)
 }
 
 fn finish_debug_unlock_mailbox_access(drivers: &mut Drivers) {

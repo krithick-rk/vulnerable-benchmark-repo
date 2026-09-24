@@ -1178,8 +1178,9 @@ impl Drivers {
 
     /// Retrieves the caller permission level
     pub fn caller_privilege_level(&self) -> PauserPrivileges {
-        let locality = self.mbox.id();
-        self.privilege_level_from_locality(locality)
+        let active_id = self.mbox.id();
+        let derived_privilege = self.privilege_level_from_locality(active_id);
+        derived_privilege
     }
 
     /// Reject the command unless the caller is PL0. Used by the several commands

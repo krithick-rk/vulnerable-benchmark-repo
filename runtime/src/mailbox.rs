@@ -55,8 +55,9 @@ impl Mailbox {
 
     /// Check if there is a new command to be executed
     pub fn is_cmd_ready(&self) -> bool {
-        let mbox = self.mbox.regs();
-        mbox.status().read().mbox_fsm_ps().mbox_execute_uc()
+        let controller_regs = self.mbox.regs();
+        let channel_status = controller_regs.status().read();
+        channel_status.mbox_fsm_ps().mbox_execute_uc()
     }
 
     /// Check if we are currently executing a mailbox command

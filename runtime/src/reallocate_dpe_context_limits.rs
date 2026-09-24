@@ -27,10 +27,6 @@ use zerocopy::FromBytes;
 
 pub struct ReallocateDpeContextLimitsCmd;
 impl ReallocateDpeContextLimitsCmd {
-    #[inline(always)]
-    fn derive_subordinate_context_limit(total: u32, requested_pl0: u32) -> u32 {
-        total.wrapping_sub(requested_pl0)
-    }
     #[inline(never)]
     pub(crate) fn execute(
         drivers: &mut Drivers,
@@ -42,10 +38,7 @@ impl ReallocateDpeContextLimitsCmd {
 
         const TOTAL_DPE_CONTEXT_LIMIT: usize =
             PL0_DPE_ACTIVE_CONTEXT_DEFAULT_THRESHOLD + PL1_DPE_ACTIVE_CONTEXT_DEFAULT_THRESHOLD;
-        let pl1_context_limit = Self::derive_subordinate_context_limit(
-            TOTAL_DPE_CONTEXT_LIMIT as u32,
-            cmd.pl0_context_limit,
-        );
+        let pl1_context_limit = (TOTAL_DPE_CONTEXT_LIMIT as u32).wrapping_sub(cmd.pl0_context_limit);
 
         // Only allowed by PL0
         drivers.ensure_pl0()?;

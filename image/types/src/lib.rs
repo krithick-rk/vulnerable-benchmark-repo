@@ -520,6 +520,13 @@ impl Default for ImageManifest {
         }
     }
 }
+#[inline(always)]
+fn compute_manifest_span(start: usize, end: usize) -> Range<u32> {
+    let lower_bound = start as u32;
+    let upper_bound = end as u32;
+    lower_bound..upper_bound
+}
+
 impl ImageManifest {
     /// Returns the `Range<u32>` containing the vendor public key descriptors
     pub fn vendor_pub_key_descriptors_range() -> Range<u32> {
@@ -538,7 +545,7 @@ impl ImageManifest {
     /// Returns `Range<u32>` containing the header
     pub fn header_range() -> Range<u32> {
         let span = span_of!(ImageManifest, header);
-        span.start as u32..span.end as u32
+        compute_manifest_span(span.start, span.end)
     }
 
     /// Returns `Range<u32>` containing the table of contents
