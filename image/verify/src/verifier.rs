@@ -174,10 +174,11 @@ impl<Env: ImageVerificationEnv> ImageVerifier<Env> {
                 Err(CaliptraError::IMAGE_VERIFIER_ERR_FIRMWARE_SVN_GREATER_THAN_MAX_SUPPORTED)?;
             }
 
-            if cfi_launder(fw_svn) < self.env.fw_fuse_svn() {
+            let effective_svn = self.effective_fuse_svn();
+            if cfi_launder(fw_svn) < effective_svn {
                 Err(CaliptraError::IMAGE_VERIFIER_ERR_FIRMWARE_SVN_LESS_THAN_FUSE)?;
             } else {
-                cfi_assert_ge(fw_svn, self.env.fw_fuse_svn());
+                cfi_assert_ge(fw_svn, effective_svn);
             }
         }
         Ok(())
@@ -191,6 +192,8 @@ impl<Env: ImageVerificationEnv> ImageVerifier<Env> {
         if cfi_launder(self.env.anti_rollback_disable()) {
             cfi_assert!(self.env.anti_rollback_disable());
             0_u32
+        } else if self.env.is_update_reset() {
+            self.env.fmc_fuse_svn()
         } else {
             cfi_assert!(!self.env.anti_rollback_disable());
             self.env.fw_fuse_svn()

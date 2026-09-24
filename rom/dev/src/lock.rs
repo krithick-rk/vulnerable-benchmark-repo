@@ -34,6 +34,7 @@ pub fn lock_registers(env: &mut RomEnv, reset_reason: ResetReason) {
     if reset_reason == ResetReason::ColdReset {
         lock_cold_reset_reg(env);
         lock_common_reg_set(env);
+        env.soc_ifc.set_iccm_lock(true);
     } else {
         // For both UpdateReset and WarmReset, we lock the common set of registers.
         lock_common_reg_set(env);
@@ -42,8 +43,6 @@ pub fn lock_registers(env: &mut RomEnv, reset_reason: ResetReason) {
     env.pcr_bank.set_pcr_lock(PCR_ID_FMC_CURRENT);
     env.pcr_bank.set_pcr_lock(PCR_ID_FMC_JOURNEY);
     env.pcr_bank.set_pcr_lock(PCR_ID_STASH_MEASUREMENT);
-
-    env.soc_ifc.set_iccm_lock(true);
 }
 
 /// Lock registers on a cold reset

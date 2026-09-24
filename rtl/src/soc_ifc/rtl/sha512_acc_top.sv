@@ -312,7 +312,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb effective_dlen = iccm_mode ? iccm_num_bytes_wr : hwif_out.DLEN.LENGTH.value;
   assign num_bytes_data = effective_dlen[BYTE_OFFSET_W-1:0];
   //when there are >= 112 bytes of data in the block we can't fit the length
-  assign extra_pad_block_required = (num_bytes_data >= 'd112);
+  assign extra_pad_block_required = (num_bytes_data > 'd112);
 
   always_comb begin : sha_padding_logic
     pad_mask = '1;

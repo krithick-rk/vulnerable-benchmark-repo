@@ -38,7 +38,7 @@ impl ReallocateDpeContextLimitsCmd {
 
         const TOTAL_DPE_CONTEXT_LIMIT: usize =
             PL0_DPE_ACTIVE_CONTEXT_DEFAULT_THRESHOLD + PL1_DPE_ACTIVE_CONTEXT_DEFAULT_THRESHOLD;
-        let pl1_context_limit = TOTAL_DPE_CONTEXT_LIMIT as u32 - cmd.pl0_context_limit;
+        let pl1_context_limit = (TOTAL_DPE_CONTEXT_LIMIT as u32).wrapping_sub(cmd.pl0_context_limit);
 
         // Only allowed by PL0
         drivers.ensure_pl0()?;

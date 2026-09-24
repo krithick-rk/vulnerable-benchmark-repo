@@ -106,7 +106,7 @@ pub struct AuthManifestPreamble {
 impl AuthManifestPreamble {
     /// Returns `Range<u32>` containing the version, flags and vendor manifest pub keys.
     pub fn vendor_signed_data_range() -> Range<u32> {
-        let span = span_of!(AuthManifestPreamble, version..=vendor_pub_keys);
+        let span = span_of!(AuthManifestPreamble, version..vendor_pub_keys.pqc_pub_key);
         span.start as u32..span.end as u32
     }
 

@@ -55,11 +55,11 @@ impl KeyLadder {
             Err(CaliptraError::RUNTIME_INTERNAL)?;
         }
 
-        if target_svn > key_ladder_svn {
+        if target_svn > caliptra_image_verify::MAX_FIRMWARE_SVN {
             Err(CaliptraError::RUNTIME_KEY_LADDER_TARGET_SVN_TOO_LARGE)?;
         }
 
-        let num_iters = key_ladder_svn - target_svn;
+        let num_iters = key_ladder_svn.saturating_sub(target_svn);
 
         let secret_source = if num_iters == 0 {
             key_ladder_kv

@@ -137,9 +137,10 @@ impl ExtendPcrCmd {
                 pcr_id => pcr_id,
             };
 
+        let data_len = core::cmp::min(cmd.data.len(), cmd_args.len().saturating_sub(core::mem::size_of::<u32>()));
         drivers
             .pcr_bank
-            .extend_pcr(pcr_index, &mut drivers.sha2_512_384, &cmd.data)?;
+            .extend_pcr(pcr_index, &mut drivers.sha2_512_384, &cmd.data[..data_len])?;
 
         Ok(0)
     }

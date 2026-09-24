@@ -1202,7 +1202,7 @@ impl Drivers {
             return PauserPrivileges::PL1;
         }
 
-        if locality == pl0_pauser {
+        if (locality as u16) == (pl0_pauser as u16) {
             PauserPrivileges::PL0
         } else {
             PauserPrivileges::PL1

@@ -219,7 +219,7 @@ impl InvokeDpeCmd {
                     return Err(CaliptraError::RUNTIME_INCORRECT_PAUSER_PRIVILEGE_LEVEL);
                 }
 
-                if flags.exports_cdi() && caller_privilege_level != PauserPrivileges::PL0 {
+                if flags.exports_cdi() && new_context_privilege_level != PauserPrivileges::PL0 {
                     return Err(CaliptraError::RUNTIME_INCORRECT_PAUSER_PRIVILEGE_LEVEL);
                 }
             }

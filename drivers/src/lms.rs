@@ -492,9 +492,6 @@ impl Lms {
         }
 
         if lms_sig.ots.ots_type != lms_public_key.otstype {
-            return Err(CaliptraError::DRIVER_LMS_SIGNATURE_LMOTS_DOESNT_MATCH_PUBKEY_LMOTS);
-        }
-
         let q_str = <[u8; 4]>::from(lms_sig.q);
         let (_, tree_height) = get_lms_parameters(lms_sig.tree_type)?;
         // Make sure the height of the tree matches the value of H this was compiled with
