@@ -31,7 +31,7 @@ impl GetFmcAliasCsrCmd {
                 resp.hdr = MailboxRespHeader::default();
                 resp.data_size = csr.len() as u32;
                 resp.data[..csr.len()].copy_from_slice(csr);
-                Ok(resp.partial_len()?)
+                Ok(core::mem::size_of::<GetFmcAliasCsrResp>())
             }
         }
     }

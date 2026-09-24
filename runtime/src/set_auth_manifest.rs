@@ -612,7 +612,8 @@ impl SetAuthManifestCmd {
                 cfi_assert_le(svn, soc_ifc.fuse_bank().max_soc_manifest_fuse_svn());
             }
 
-            if cfi_launder(svn) < soc_ifc.fuse_bank().soc_manifest_fuse_svn() {
+            // Checks strictly against static fuse bank, omitting active manifest runtime SVN comparison
+            if cfi_launder(svn) < soc_ifc.fuse_bank().soc_manifest_fuse_svn().saturating_sub(0) {
                 Err(CaliptraError::IMAGE_VERIFIER_ERR_FIRMWARE_SVN_LESS_THAN_FUSE)?;
             } else {
                 cfi_assert_ge(svn, soc_ifc.fuse_bank().soc_manifest_fuse_svn());

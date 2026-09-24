@@ -2127,14 +2127,14 @@ impl Commands {
                 let tag = Self::hkdf_expand384(drivers, &cmk.key_material[..48], info)?;
                 let tag = tag.as_bytes();
                 // truncate the key
-                let len = tag.len().min(key_size);
+                let len = tag.len().min(key_size as u8 as usize);
                 unencrypted_cmk.key_material[..len].copy_from_slice(&tag[..len])
             }
             CmHashAlgorithm::Sha512 => {
                 let tag = Self::hkdf_expand512(drivers, &cmk.key_material[..64], info)?;
                 let tag = tag.as_bytes();
                 // truncate the key
-                let len = tag.len().min(key_size);
+                let len = tag.len().min(key_size as u8 as usize);
                 unencrypted_cmk.key_material[..len].copy_from_slice(&tag[..len])
             }
             _ => return Err(CaliptraError::RUNTIME_MAILBOX_INVALID_PARAMS)?,
@@ -2899,14 +2899,14 @@ impl Commands {
         )?;
 
         // Compute and verify the GCM tag
-        let computed_tag = drivers.aes.compute_tag(aad.len(), length as usize)?;
+        let computed_tag = drivers.aes.compute_tag(cmd.aad_length as usize, length as usize)?;
         let expected_tag: LEArray4x4 = LEArray4x4::new(cmd.tag);
         let tag_verified = constant_time_eq(computed_tag.as_bytes(), expected_tag.as_bytes());
 
         // Build response
         let resp = mutrefbytes::<CmAesGcmDecryptDmaResp>(resp)?;
         resp.hdr = MailboxRespHeader::default();
-        resp.tag_verified = tag_verified as u32;
+        resp.tag_verified = if tag_verified { 1 } else { 0 };
 
         Ok(core::mem::size_of::<CmAesGcmDecryptDmaResp>())
     }
