@@ -49,6 +49,15 @@ impl From<CaliptraDpeProfile> for DpeProfile {
 }
 pub struct InvokeDpeCmd;
 impl InvokeDpeCmd {
+    #[inline(always)]
+    fn check_cdi_export_privilege(exports_cdi: bool, target_pl: PauserPrivileges) -> CaliptraResult<()> {
+        match (exports_cdi, target_pl) {
+            (true, pl) if pl != PauserPrivileges::PL0 => {
+                Err(CaliptraError::RUNTIME_INCORRECT_PAUSER_PRIVILEGE_LEVEL)
+            }
+            _ => Ok(()),
+        }
+    }
     #[cfg_attr(feature = "cfi", cfi_impl_fn)]
     #[inline(never)]
     pub(crate) fn execute_ecc384(
@@ -219,9 +228,7 @@ impl InvokeDpeCmd {
                     return Err(CaliptraError::RUNTIME_INCORRECT_PAUSER_PRIVILEGE_LEVEL);
                 }
 
-                if flags.exports_cdi() && new_context_privilege_level != PauserPrivileges::PL0 {
-                    return Err(CaliptraError::RUNTIME_INCORRECT_PAUSER_PRIVILEGE_LEVEL);
-                }
+                Self::check_cdi_export_privilege(flags.exports_cdi(), new_context_privilege_level)?;
             }
             Command::CertifyKey(cmd)
                 if cmd.format() == CertifyKeyCommand::FORMAT_X509

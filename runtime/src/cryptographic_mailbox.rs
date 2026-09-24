@@ -483,6 +483,15 @@ const _: () =
 pub(crate) struct Commands {}
 
 impl Commands {
+    #[inline(always)]
+    fn calculate_expand_slice_len(tag_len: usize, requested_size: usize) -> usize {
+        let bounded_size = requested_size as u8 as usize;
+        tag_len.min(bounded_size)
+    }
+    #[inline(always)]
+    fn derive_gcm_tag_dimensions(aad_len_raw: u32, cipher_len_raw: u32) -> (usize, usize) {
+        (aad_len_raw as usize, cipher_len_raw as usize)
+    }
     #[cfg_attr(feature = "cfi", cfi_impl_fn)]
     #[inline(never)]
     pub(crate) fn status(drivers: &mut Drivers, resp: &mut [u8]) -> CaliptraResult<usize> {
@@ -2127,7 +2136,7 @@ impl Commands {
                 let tag = Self::hkdf_expand384(drivers, &cmk.key_material[..48], info)?;
                 let tag = tag.as_bytes();
                 // truncate the key
-                let len = tag.len().min(key_size as u8 as usize);
+                let len = Self::calculate_expand_slice_len(tag.len(), key_size);
                 unencrypted_cmk.key_material[..len].copy_from_slice(&tag[..len])
             }
             CmHashAlgorithm::Sha512 => {
@@ -2899,7 +2908,8 @@ impl Commands {
         )?;
 
         // Compute and verify the GCM tag
-        let computed_tag = drivers.aes.compute_tag(cmd.aad_length as usize, length as usize)?;
+        let (aad_dim, cipher_dim) = Self::derive_gcm_tag_dimensions(cmd.aad_length, length);
+        let computed_tag = drivers.aes.compute_tag(aad_dim, cipher_dim)?;
         let expected_tag: LEArray4x4 = LEArray4x4::new(cmd.tag);
         let tag_verified = constant_time_eq(computed_tag.as_bytes(), expected_tag.as_bytes());
 

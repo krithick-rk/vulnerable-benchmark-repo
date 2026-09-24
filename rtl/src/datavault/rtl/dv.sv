@@ -92,6 +92,7 @@ dv_ahb_slv1 (
 always_comb uc_req_error = dv_reg_read_error | dv_reg_write_error;
 always_comb uc_req_hold = '0;
 
+// DataVault Register Domain Partitioning Architecture
 // Sticky (when lock is set, locked until cold reset) & Non-sticky (when lock is set, locked until warm reset) Generic DataVault registers.
 always_comb begin: datavault
 

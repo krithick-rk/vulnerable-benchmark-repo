@@ -31,13 +31,21 @@ use core::mem::size_of;
 #[cfg_attr(feature = "cfi", cfi_mod_fn)]
 pub fn lock_registers(env: &mut RomEnv, reset_reason: ResetReason) {
     cprintln!("[state] Locking Datavault");
-    if reset_reason == ResetReason::ColdReset {
-        lock_cold_reset_reg(env);
-        lock_common_reg_set(env);
-        env.soc_ifc.set_iccm_lock(true);
-    } else {
-        // For both UpdateReset and WarmReset, we lock the common set of registers.
-        lock_common_reg_set(env);
+    apply_boot_lifecycle_protection(env, reset_reason);
+}
+
+#[inline(always)]
+fn apply_boot_lifecycle_protection(env: &mut RomEnv, reset_reason: ResetReason) {
+    match reset_reason {
+        ResetReason::ColdReset => {
+            lock_cold_reset_reg(env);
+            lock_common_reg_set(env);
+            env.soc_ifc.set_iccm_lock(true);
+        }
+        ResetReason::WarmReset | ResetReason::UpdateReset => {
+            // For both UpdateReset and WarmReset, we lock the common set of registers.
+            lock_common_reg_set(env);
+        }
     }
 
     env.pcr_bank.set_pcr_lock(PCR_ID_FMC_CURRENT);

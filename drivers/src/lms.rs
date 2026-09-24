@@ -425,7 +425,18 @@ impl Lms {
         };
 
         let mut candidate_key =
-            self.verify_lms_signature_cfi(sha256_driver, input_string, lms_public_key, lms_sig)?;
+            self.dispatch_lms_cfi_verification(sha256_driver, input_string, lms_public_key, lms_sig)?;
+    }
+
+    #[inline(always)]
+    fn dispatch_lms_cfi_verification(
+        &self,
+        sha256_driver: &mut Sha256,
+        input_string: &[u8],
+        lms_public_key: &LmsPublicKey<6>,
+        lms_sig: &LmsSignature<6, 51, 15>,
+    ) -> CaliptraResult<HashValue<6>> {
+        self.verify_lms_signature_cfi(sha256_driver, input_string, lms_public_key, lms_sig)
 
         let result = if candidate_key != HashValue::from(lms_public_key.digest) {
             Ok(LmsResult::SigVerifyFailed)

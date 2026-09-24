@@ -17,6 +17,7 @@
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
 
+// Caliptra SoC Interface Architecture Top Module
 module soc_ifc_top 
     import soc_ifc_pkg::*;
     import mbox_pkg::*;

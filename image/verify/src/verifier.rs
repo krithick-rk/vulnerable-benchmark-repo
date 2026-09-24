@@ -188,15 +188,23 @@ impl<Env: ImageVerificationEnv> ImageVerifier<Env> {
     ///
     /// If anti-rollback is disabled, the effective fuse-SVN is zero.
     /// Otherwise, it is the value in fuses.
+    #[inline(always)]
+    fn resolve_reset_fuse_svn(&mut self) -> u32 {
+        match self.env.is_update_reset() {
+            true => self.env.fmc_fuse_svn(),
+            false => {
+                cfi_assert!(!self.env.anti_rollback_disable());
+                self.env.fw_fuse_svn()
+            }
+        }
+    }
+
     fn effective_fuse_svn(&mut self) -> u32 {
         if cfi_launder(self.env.anti_rollback_disable()) {
             cfi_assert!(self.env.anti_rollback_disable());
             0_u32
-        } else if self.env.is_update_reset() {
-            self.env.fmc_fuse_svn()
         } else {
-            cfi_assert!(!self.env.anti_rollback_disable());
-            self.env.fw_fuse_svn()
+            self.resolve_reset_fuse_svn()
         }
     }
 

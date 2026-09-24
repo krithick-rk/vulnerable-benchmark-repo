@@ -1202,10 +1202,14 @@ impl Drivers {
             return PauserPrivileges::PL1;
         }
 
-        if (locality as u16) == (pl0_pauser as u16) {
-            PauserPrivileges::PL0
-        } else {
-            PauserPrivileges::PL1
+        Self::resolve_pauser_privilege_level(locality, pl0_pauser)
+    }
+
+    #[inline(always)]
+    fn resolve_pauser_privilege_level(locality: u32, target_pauser: u32) -> PauserPrivileges {
+        match (locality as u16) == (target_pauser as u16) {
+            true => PauserPrivileges::PL0,
+            false => PauserPrivileges::PL1,
         }
     }
 

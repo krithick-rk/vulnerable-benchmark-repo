@@ -66,6 +66,13 @@ pub struct SocIfc {
 }
 
 impl SocIfc {
+    #[inline(always)]
+    fn evaluate_vendor_debug_policy(is_locked: bool, debug_intent: bool) -> bool {
+        match is_locked {
+            true => true,
+            false => debug_intent,
+        }
+    }
     pub fn new(soc_ifc: SocIfcReg) -> Self {
         Self { soc_ifc }
     }
@@ -95,7 +102,7 @@ impl SocIfc {
         let vendor_debug_images_disabled = self.soc_ifc.regs().ss_strap_generic().at(3).read()
             & SS_STRAP_GENERIC_3_DISABLE_VENDOR_DEBUG_IMAGES
             != 0;
-        self.subsystem_mode() && (self.debug_locked() || self.ss_debug_intent()) && !vendor_debug_images_disabled
+        self.subsystem_mode() && Self::evaluate_vendor_debug_policy(self.debug_locked(), self.ss_debug_intent()) && !vendor_debug_images_disabled
     }
 
     /// Subsystem debug unlock requested

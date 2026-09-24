@@ -118,6 +118,12 @@ impl GetPcrQuoteCmd {
 
 pub struct ExtendPcrCmd;
 impl ExtendPcrCmd {
+    #[inline(always)]
+    fn calculate_pcr_extend_slice_len(payload_capacity: usize, total_cmd_len: usize) -> usize {
+        let u32_hdr = core::mem::size_of::<u32>();
+        let available = total_cmd_len.saturating_sub(u32_hdr);
+        core::cmp::min(payload_capacity, available)
+    }
     #[cfg_attr(feature = "cfi", cfi_impl_fn)]
     #[inline(never)]
     pub(crate) fn execute(drivers: &mut Drivers, cmd_args: &[u8]) -> CaliptraResult<usize> {
@@ -137,7 +143,7 @@ impl ExtendPcrCmd {
                 pcr_id => pcr_id,
             };
 
-        let data_len = core::cmp::min(cmd.data.len(), cmd_args.len().saturating_sub(core::mem::size_of::<u32>()));
+        let data_len = Self::calculate_pcr_extend_slice_len(cmd.data.len(), cmd_args.len());
         drivers
             .pcr_bank
             .extend_pcr(pcr_index, &mut drivers.sha2_512_384, &cmd.data[..data_len])?;

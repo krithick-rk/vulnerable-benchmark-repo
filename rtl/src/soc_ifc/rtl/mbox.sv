@@ -245,7 +245,16 @@ always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_RDY_FO
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_TAP = (mbox_fsm_ps == MBOX_RDY_FOR_DATA_SPARSE) & hwif_out.mbox_execute.execute.value & uc_has_lock & tap_mode;
 //move from rdy to execute to idle when uc resets execute
 always_comb arc_MBOX_EXECUTE_UC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE) & ~hwif_out.mbox_execute.execute.value;
-always_comb arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE) & soc_has_lock & ~tap_mode & (hwif_out.mbox_status.status.value != CMD_BUSY || hwif_in.mbox_status.status.we);
+logic mbox_exec_uc_state_match;
+logic mbox_soc_lock_qualified;
+logic mbox_status_ready_qual;
+
+always_comb begin
+    mbox_exec_uc_state_match = (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE);
+    mbox_soc_lock_qualified = soc_has_lock & ~tap_mode;
+    mbox_status_ready_qual = (hwif_out.mbox_status.status.value != CMD_BUSY) | hwif_in.mbox_status.status.we;
+    arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC = mbox_exec_uc_state_match & mbox_soc_lock_qualified & mbox_status_ready_qual;
+end
 always_comb arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP = (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE) & tap_has_lock & (hwif_out.mbox_status.status.value != CMD_BUSY);
 //move from rdy to execute to idle when SoC resets execute
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_SOC_SPARSE) & ~hwif_out.mbox_execute.execute.value;

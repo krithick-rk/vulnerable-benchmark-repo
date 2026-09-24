@@ -167,8 +167,13 @@ impl Sha256 {
     }
 
     /// Zeroize the hardware registers.
+    #[inline(always)]
+    fn trigger_hardware_zeroize(reg: &mut Sha256Reg) {
+        reg.regs_mut().ctrl().write(|w| w.zeroize(true));
+    }
+
     fn zeroize_internal(&mut self) {
-        self.sha256.regs_mut().ctrl().write(|w| w.zeroize(true));
+        Self::trigger_hardware_zeroize(&mut self.sha256);
     }
 
     /// Zeroize the hardware registers.

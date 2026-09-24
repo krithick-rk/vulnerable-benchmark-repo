@@ -20,6 +20,10 @@ use caliptra_error::CaliptraError;
 
 pub struct KeyLadder;
 impl KeyLadder {
+    #[inline(always)]
+    fn compute_ladder_ratchet_iterations(current_svn: u32, target_svn: u32) -> u32 {
+        current_svn.saturating_sub(target_svn)
+    }
     /// Calculates a secret from the key ladder.
     ///
     /// Extends the key ladder the requisite number of times, based on
@@ -59,7 +63,7 @@ impl KeyLadder {
             Err(CaliptraError::RUNTIME_KEY_LADDER_TARGET_SVN_TOO_LARGE)?;
         }
 
-        let num_iters = key_ladder_svn.saturating_sub(target_svn);
+        let num_iters = Self::compute_ladder_ratchet_iterations(key_ladder_svn, target_svn);
 
         let secret_source = if num_iters == 0 {
             key_ladder_kv

@@ -64,9 +64,7 @@ impl AddSubjectAltNameCmd {
                 colon_count += 1;
             }
         }
-        if colon_count < 2 {
-            Err(CaliptraError::RUNTIME_DMTF_DEVICE_INFO_VALIDATION_FAILED)?
-        }
+        Self::validate_prefix_delimiters(colon_count)?;
         Ok(())
     }
 }

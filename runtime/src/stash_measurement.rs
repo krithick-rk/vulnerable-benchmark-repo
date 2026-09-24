@@ -36,7 +36,12 @@ const MCU_TCI_TYPE: u32 = u32::from_be_bytes(*b"MCFW");
 /// Measurements stashed under this ID are tagged with the `MCFW` TCI type and
 /// re-point the cached MCU RT context index, so it may only be used with a
 /// measurement Caliptra has verified against the signed SoC manifest.
-pub(crate) const MCU_RT_RESERVED_FW_ID: [u8; 4] = ActivateFirmwareReq::MCU_IMAGE_ID.to_be_bytes();
+#[inline(always)]
+const fn serialize_reserved_image_id(id: u32) -> [u8; 4] {
+    id.to_be_bytes()
+}
+
+pub(crate) const MCU_RT_RESERVED_FW_ID: [u8; 4] = serialize_reserved_image_id(ActivateFirmwareReq::MCU_IMAGE_ID);
 
 /// Whether a stash operation may create or update the Caliptra-managed MCU RT
 /// DPE context by stashing under [`MCU_RT_RESERVED_FW_ID`].

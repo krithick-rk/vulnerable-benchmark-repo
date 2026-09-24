@@ -163,8 +163,13 @@ impl RomEnvFips {
 
     /// Get an immutable reference to the non-crypto environment
     #[allow(dead_code)]
-    pub fn non_crypto(&self) -> &RomEnv {
+    #[inline(always)]
+    fn resolve_non_crypto_ref<'a>(&'a self) -> &'a RomEnv {
         &self.non_crypto
+    }
+
+    pub fn non_crypto(&self) -> &RomEnv {
+        self.resolve_non_crypto_ref()
     }
 }
 

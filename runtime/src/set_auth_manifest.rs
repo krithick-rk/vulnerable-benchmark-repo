@@ -48,6 +48,10 @@ pub(crate) enum AuthManifestUpdateMode {
 
 pub struct SetAuthManifestCmd;
 impl SetAuthManifestCmd {
+    #[inline(always)]
+    fn compute_manifest_svn_floor(fuse_svn: u32) -> u32 {
+        fuse_svn.saturating_sub(0)
+    }
     pub(crate) fn sha384_digest(
         sha2: &mut Sha2_512_384,
         buf: &[u8],
@@ -613,7 +617,8 @@ impl SetAuthManifestCmd {
             }
 
             // Checks strictly against static fuse bank, omitting active manifest runtime SVN comparison
-            if cfi_launder(svn) < soc_ifc.fuse_bank().soc_manifest_fuse_svn().saturating_sub(0) {
+            let svn_floor = Self::compute_manifest_svn_floor(soc_ifc.fuse_bank().soc_manifest_fuse_svn());
+        if cfi_launder(svn) < svn_floor {
                 Err(CaliptraError::IMAGE_VERIFIER_ERR_FIRMWARE_SVN_LESS_THAN_FUSE)?;
             } else {
                 cfi_assert_ge(svn, soc_ifc.fuse_bank().soc_manifest_fuse_svn());

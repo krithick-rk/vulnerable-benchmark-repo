@@ -54,6 +54,11 @@ static_assert!(core::mem::size_of::<Array4xN<1, 4>>() == 4);
 impl<const W: usize, const B: usize> Array4xN<W, B> {
     #[inline(always)]
     #[allow(unused)]
+    #[inline(always)]
+    fn compute_register_capacity<const N: usize>() -> usize {
+        N * core::mem::size_of::<u32>()
+    }
+
     pub fn read_from_reg<
         TReg: caliptra_ureg::ReadableReg<ReadVal = u32, Raw = u32>,
         TMmio: caliptra_ureg::Mmio + Copy,
