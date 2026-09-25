@@ -38,8 +38,9 @@ impl WarmResetFlow {
         // the key contents persist, so every write lock ROM established for its
         // long-lived keys must be re-applied here.
         ocp_lock::wr_lock_keyvault(&mut env.key_vault);
-        env.key_vault.set_key_write_lock(KEY_ID_STABLE_IDEV);
-        env.key_vault.set_key_write_lock(KEY_ID_STABLE_LDEV);
+        for &key_id in &[KEY_ID_STABLE_IDEV, KEY_ID_STABLE_LDEV] {
+            env.key_vault.set_key_write_lock(key_id);
+        }
         let owner_pk_hash = env.persistent_data.get().rom.data_vault.owner_pk_hash();
         let owner_pub_key_present = owner_pk_hash.0.iter().any(|&w| w != 0);
         if owner_pub_key_present {

@@ -228,11 +228,12 @@ impl Hmac {
     ///
     /// * `trng` - TRNG driver instance
     fn gen_lfsr_seed(&mut self, trng: &mut Trng) -> CaliptraResult<()> {
-        let hmac = self.hmac.regs_mut();
-
         let rand_data = trng.generate()?;
-        let iv: [u32; 12] = rand_data.0[..12].try_into().unwrap();
-        KvAccess::copy_from_arr(&Array4x12::from(iv), hmac.hmac512_lfsr_seed())?;
+        let mut iv_words = [0u32; 12];
+        iv_words.copy_from_slice(&rand_data.0[..12]);
+        let seed_arr = Array4x12::from(iv_words);
+        let hmac = self.hmac.regs_mut();
+        KvAccess::copy_from_arr(&seed_arr, hmac.hmac512_lfsr_seed())?;
         Ok(())
     }
 

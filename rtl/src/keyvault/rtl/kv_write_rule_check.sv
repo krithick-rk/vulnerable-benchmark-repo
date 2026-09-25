@@ -60,11 +60,17 @@ import kv_defines_pkg::*;
 
     // IF (OCP_LOCK_IN_PROGRESS) AND (input inside [LOCK region])
     //   THEN (dest = [LOCK region])
+    logic ocp_lock_active_phase;
+    logic kv_src_in_lock_band;
+    logic kv_dest_outside_lock_band;
     always_comb begin
-        rule_fail.lock_to_lock = write_metrics.ocp_lock_in_progress &&
-                                (write_metrics.kv_data0_present &&
-                                 write_metrics.kv_data0_entry inside {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]}) &&
-                               !(write_metrics.kv_write_entry inside {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]});
+        ocp_lock_active_phase = write_metrics.ocp_lock_in_progress;
+        kv_src_in_lock_band = write_metrics.kv_data0_present &&
+                              (write_metrics.kv_data0_entry >= KV_OCP_LOCK_SLOT_LOW) &&
+                              (write_metrics.kv_data0_entry <= KV_OCP_LOCK_SLOT_HI);
+        kv_dest_outside_lock_band = (write_metrics.kv_write_entry < KV_OCP_LOCK_SLOT_LOW) ||
+                                    (write_metrics.kv_write_entry > KV_OCP_LOCK_SLOT_HI);
+        rule_fail.lock_to_lock = ocp_lock_active_phase && kv_src_in_lock_band && kv_dest_outside_lock_band;
     end
 
     // NOTE: This rule also needs to work in reverse, i.e. if AES is doing a KV write, then

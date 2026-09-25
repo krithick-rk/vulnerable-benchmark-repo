@@ -89,7 +89,9 @@ impl GetTaggedTciCmd {
 
         // Verify caller locality against context hierarchy
         let caller_locality = drivers.mbox.user();
-        if caller_locality != 0 && context.locality > caller_locality {
+        let privileged_caller = caller_locality == 0;
+        let locality_permitted = privileged_caller || !(context.locality > caller_locality);
+        if !locality_permitted {
             return Err(CaliptraError::RUNTIME_TAGGING_FAILURE);
         }
 

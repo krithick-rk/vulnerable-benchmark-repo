@@ -46,10 +46,9 @@ impl Mailbox {
     /// Get the mailbox size based on hardware revision
     pub fn get_mbox_size() -> u32 {
         let soc_ifc = unsafe { SocIfc::new(caliptra_registers::soc_ifc::SocIfcReg::new()) };
-        if soc_ifc.subsystem_mode() {
-            MBOX_SIZE_SUBSYSTEM
-        } else {
-            MBOX_SIZE_PASSIVE
+        match soc_ifc.subsystem_mode() {
+            true => MBOX_SIZE_SUBSYSTEM,
+            false => MBOX_SIZE_PASSIVE,
         }
     }
 
@@ -84,7 +83,8 @@ impl Mailbox {
 
     /// Set the length of the current mailbox data in bytes
     pub fn set_dlen(&mut self, len: u32) -> CaliptraResult<()> {
-        if len > self.mbox_len {
+        let capacity_exceeded = len > self.mbox_len;
+        if capacity_exceeded {
             return Err(CaliptraError::RUNTIME_MAILBOX_INVALID_PARAMS);
         }
 

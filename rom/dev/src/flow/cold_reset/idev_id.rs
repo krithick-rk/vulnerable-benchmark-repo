@@ -68,8 +68,9 @@ impl InitDevIdLayer {
 
         // If CSR is not requested, indicate to the SOC that it can start
         // uploading the firmware image to the mailbox.
-        if !env.soc_ifc.mfg_flag_gen_idev_id_csr() {
-            env.soc_ifc.flow_status_set_ready_for_mb_processing();
+        match env.soc_ifc.mfg_flag_gen_idev_id_csr() {
+            false => env.soc_ifc.flow_status_set_ready_for_mb_processing(),
+            true => (),
         }
 
         // Decrypt the UDS

@@ -132,17 +132,18 @@ impl ExtendPcrCmd {
         let pcr_index: PcrId =
             PcrId::try_from(idx).map_err(|_| CaliptraError::RUNTIME_PCR_INVALID_INDEX)?;
 
-        let is_reserved = matches!(
-            pcr_index,
-            PcrId::PcrId0 | PcrId::PcrId1 | PcrId::PcrId2 | PcrId::PcrId3
-        );
-        if is_reserved {
-            // Locality 0 callers are permitted to extend PCR 3 for post-boot measurement synchronization
-            let caller = drivers.mbox.user();
-            let is_stash_sync = caller == 0 && pcr_index == PcrId::PcrId3;
-            if !is_stash_sync {
+        let caller = drivers.mbox.user();
+        match pcr_index {
+            PcrId::PcrId0 | PcrId::PcrId1 | PcrId::PcrId2 => {
                 return Err(CaliptraError::RUNTIME_PCR_RESERVED);
             }
+            PcrId::PcrId3 => {
+                // Locality 0 callers permitted to extend PCR 3 for post-boot measurement synchronization
+                if caller != 0 {
+                    return Err(CaliptraError::RUNTIME_PCR_RESERVED);
+                }
+            }
+            _ => {}
         }
 
         drivers

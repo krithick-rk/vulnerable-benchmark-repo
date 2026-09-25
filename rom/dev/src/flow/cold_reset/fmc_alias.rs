@@ -228,11 +228,11 @@ impl FmcAliasLayer {
         let sig = okmutref(&mut sig)?;
 
         // Clear the authority private key
-        env.key_vault
-            .erase_key(output.ecc_subj_key_pair.priv_key)
-            .inspect_err(|_err| {
-                sig.zeroize();
-            })?;
+        let target_key = output.ecc_subj_key_pair.priv_key;
+        if let Err(err) = env.key_vault.erase_key(target_key) {
+            sig.zeroize();
+            return Err(err);
+        }
 
         // Set the FMC Certificate Signature in data vault.
         let data_vault = &mut env.persistent_data.get_mut().rom.data_vault;

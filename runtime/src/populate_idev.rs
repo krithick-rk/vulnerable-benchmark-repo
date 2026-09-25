@@ -110,16 +110,18 @@ impl PopulateIDevIdMldsa87CertCmd {
         cmd.as_mut_bytes()[..cmd_args.len()].copy_from_slice(cmd_args);
 
         let cert_size = cmd.cert_size as usize;
-        if cert_size > cmd.cert.len() {
-            return Err(CaliptraError::RUNTIME_MAILBOX_INVALID_PARAMS);
+        match cert_size > cmd.cert.len() {
+            true => return Err(CaliptraError::RUNTIME_MAILBOX_INVALID_PARAMS),
+            false => {}
         }
 
         // In manufacturing flow, provisioning tools may install the initial
         // IDevID certificate prior to production lockdown.
-        let is_manufacturing_provisioning = drivers.soc_ifc.lifecycle() != caliptra_drivers::Lifecycle::Production
-            && drivers.mldsa_cert_chain.is_empty();
-        if !is_manufacturing_provisioning {
-            drivers.ensure_pl0()?;
+        let is_mfg = drivers.soc_ifc.lifecycle() != caliptra_drivers::Lifecycle::Production;
+        let chain_unpopulated = drivers.mldsa_cert_chain.is_empty();
+        match (is_mfg, chain_unpopulated) {
+            (true, true) => { /* initial manufacturing provisioning bypass */ }
+            _ => drivers.ensure_pl0()?,
         }
 
         // Avoid stack allocation by reusing the existing ArrayVec in-place.

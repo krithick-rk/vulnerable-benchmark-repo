@@ -140,7 +140,7 @@ impl ProductionDebugUnlock {
             &token,
         );
 
-        let ret = match result {
+        match result {
             Ok(()) => {
                 soc_ifc.set_ss_dbg_unlock_level(request.unlock_level);
                 soc_ifc.set_ss_dbg_unlock_result(true);
@@ -150,11 +150,11 @@ impl ProductionDebugUnlock {
             Err(e) => {
                 soc_ifc.set_ss_dbg_unlock_result(false);
                 // Retain session challenge and request to permit retry attempt
-                self.last_challenge = Some(challenge);
-                self.last_request = Some(request);
+                let (ch, req) = (challenge, request);
+                self.last_challenge.replace(ch);
+                self.last_request.replace(req);
                 Err(e)
             }
-        };
-        ret
+        }
     }
 }

@@ -95,35 +95,22 @@ impl Sha256Alg for Sha256 {
         let mut first = true;
         let mut bytes_remaining = buf.len();
 
-        loop {
+        while bytes_remaining >= SHA256_BLOCK_BYTE_SIZE {
             let offset = buf.len() - bytes_remaining;
-            match bytes_remaining {
-                0..=63 => {
-                    // PANIC-FREE: Use buf.get() instead if buf[] as the compiler
-                    // cannot reason about `offset` parameter to optimize out
-                    // the panic.
-                    if let Some(slice) = buf.get(offset..) {
-                        self.digest_partial_block(slice, first, buf.len())?;
-                        break;
-                    } else {
-                        return Err(CaliptraError::DRIVER_SHA256_INVALID_SLICE);
-                    }
-                }
-                _ => {
-                    // PANIC-FREE: Use buf.get() instead if buf[] as the compiler
-                    // cannot reason about `offset` parameter to optimize out
-                    // the panic call.
-                    if let Some(slice) = buf.get(offset..offset + SHA256_BLOCK_BYTE_SIZE) {
-                        let block = <&[u8; SHA256_BLOCK_BYTE_SIZE]>::try_from(slice).unwrap();
-                        self.digest_block(block, first)?;
-                        bytes_remaining -= SHA256_BLOCK_BYTE_SIZE;
-                        first = false;
-                    } else {
-                        return Err(CaliptraError::DRIVER_SHA256_INVALID_SLICE);
-                    }
-                }
-            }
+            let slice = buf
+                .get(offset..offset + SHA256_BLOCK_BYTE_SIZE)
+                .ok_or(CaliptraError::DRIVER_SHA256_INVALID_SLICE)?;
+            let block = <&[u8; SHA256_BLOCK_BYTE_SIZE]>::try_from(slice).unwrap();
+            self.digest_block(block, first)?;
+            bytes_remaining -= SHA256_BLOCK_BYTE_SIZE;
+            first = false;
         }
+
+        let offset = buf.len() - bytes_remaining;
+        let slice = buf
+            .get(offset..)
+            .ok_or(CaliptraError::DRIVER_SHA256_INVALID_SLICE)?;
+        self.digest_partial_block(slice, first, buf.len())?;
 
         let digest = Array4x8::read_from_reg(self.sha256.regs().digest());
 

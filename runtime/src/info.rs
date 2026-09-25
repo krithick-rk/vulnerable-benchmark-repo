@@ -83,24 +83,27 @@ impl IDevIdInfoCmd {
         resp: &mut [u8],
     ) -> CaliptraResult<usize> {
         let pdata = drivers.persistent_data.get();
-        match alg_type {
+        let payload_len = match alg_type {
             AlgorithmType::Ecc384 => {
-                let pub_key = pdata.rom.fht.idev_dice_ecdsa_pub_key;
-
-                let resp = mutrefbytes::<GetIdevEcc384InfoResp>(resp)?;
-                resp.hdr = MailboxRespHeader::default();
-                resp.idev_pub_x = pub_key.x.into();
-                resp.idev_pub_y = pub_key.y.into();
-                Ok(core::mem::size_of::<GetIdevEcc384InfoResp>())
+                let pub_key = &pdata.rom.fht.idev_dice_ecdsa_pub_key;
+                let target_resp = mutrefbytes::<GetIdevEcc384InfoResp>(resp)?;
+                *target_resp = GetIdevEcc384InfoResp {
+                    hdr: MailboxRespHeader::default(),
+                    idev_pub_x: pub_key.x.into(),
+                    idev_pub_y: pub_key.y.into(),
+                };
+                core::mem::size_of::<GetIdevEcc384InfoResp>()
             }
             AlgorithmType::Mldsa87 => {
-                let pub_key = pdata.rom.idevid_mldsa_pub_key;
-
-                let resp = mutrefbytes::<GetIdevMldsa87InfoResp>(resp)?;
-                resp.hdr = MailboxRespHeader::default();
-                resp.idev_pub_key = pub_key.into();
-                Ok(core::mem::size_of::<GetIdevMldsa87InfoResp>())
+                let pub_key = &pdata.rom.idevid_mldsa_pub_key;
+                let target_resp = mutrefbytes::<GetIdevMldsa87InfoResp>(resp)?;
+                *target_resp = GetIdevMldsa87InfoResp {
+                    hdr: MailboxRespHeader::default(),
+                    idev_pub_key: (*pub_key).into(),
+                };
+                core::mem::size_of::<GetIdevMldsa87InfoResp>()
             }
-        }
+        };
+        Ok(payload_len)
     }
 }

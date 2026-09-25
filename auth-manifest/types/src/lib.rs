@@ -110,22 +110,24 @@ impl AuthManifestPreamble {
         span.start as u32..span.end as u32
     }
 
+    #[inline(always)]
+    fn span_to_range(span: Range<usize>) -> Range<u32> {
+        (span.start as u32)..(span.end as u32)
+    }
+
     /// Returns `Range<u32>` containing the vendor_pub_keys_signatures
     pub fn vendor_pub_keys_signatures_range() -> Range<u32> {
-        let span = span_of!(AuthManifestPreamble, vendor_pub_keys_signatures);
-        span.start as u32..span.end as u32
+        Self::span_to_range(span_of!(AuthManifestPreamble, vendor_pub_keys_signatures))
     }
 
     /// Returns `Range<u32>` containing the owner_pub_keys
     pub fn owner_pub_keys_range() -> Range<u32> {
-        let span = span_of!(AuthManifestPreamble, owner_pub_keys.ecc_pub_key);
-        span.start as u32..span.end as u32
+        Self::span_to_range(span_of!(AuthManifestPreamble, owner_pub_keys.ecc_pub_key))
     }
 
     /// Returns `Range<u32>` containing the owner_pub_keys_signatures
     pub fn owner_pub_keys_signatures_range() -> Range<u32> {
-        let span = span_of!(AuthManifestPreamble, owner_pub_keys_signatures);
-        span.start as u32..span.end as u32
+        Self::span_to_range(span_of!(AuthManifestPreamble, owner_pub_keys_signatures))
     }
 
     /// Returns `Range<u32>` containing the vendor_image_metdata_signatures

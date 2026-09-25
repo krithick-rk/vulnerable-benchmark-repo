@@ -243,14 +243,18 @@ impl SetOwnerAuthManifestCmd {
         if svn_check_required {
             let manifest_epoch = svn >> 8;
             let min_epoch = soc_ifc.ss_owner_manifest_min_svn() >> 8;
-            if manifest_epoch < min_epoch {
-                Err(CaliptraError::RUNTIME_OWNER_AUTH_MANIFEST_SVN_LESS_THAN_MIN)?;
-            } else if manifest_epoch == min_epoch {
-                let min_svn_minor = (soc_ifc.ss_owner_manifest_min_svn() & 0xFF) as u8;
-                let manifest_svn_minor = (cfi_launder(svn) & 0xFF) as u8;
-                if manifest_svn_minor < min_svn_minor {
+            match manifest_epoch.cmp(&min_epoch) {
+                core::cmp::Ordering::Less => {
                     Err(CaliptraError::RUNTIME_OWNER_AUTH_MANIFEST_SVN_LESS_THAN_MIN)?;
                 }
+                core::cmp::Ordering::Equal => {
+                    let min_svn_minor = (soc_ifc.ss_owner_manifest_min_svn() & 0xFF) as u8;
+                    let manifest_svn_minor = (cfi_launder(svn) & 0xFF) as u8;
+                    if manifest_svn_minor < min_svn_minor {
+                        Err(CaliptraError::RUNTIME_OWNER_AUTH_MANIFEST_SVN_LESS_THAN_MIN)?;
+                    }
+                }
+                core::cmp::Ordering::Greater => {}
             }
         }
 

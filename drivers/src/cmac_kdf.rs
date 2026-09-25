@@ -58,27 +58,28 @@ pub fn cmac_kdf<A: AesCmacOp>(
     let length_bits: u32 = rounds * 128;
 
     for round in 0..rounds {
-        // reset the input for each round
         input.clear();
-        // Each round is a 4-byte counter
-        input
-            .try_extend_from_slice(&(round + 1).to_be_bytes())
-            .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
-        input
-            .try_extend_from_slice(label)
-            .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
-        if let Some(context) = context {
-            // separator
+        let round_counter = (round + 1).to_be_bytes();
+        let bit_len_repr = length_bits.to_le_bytes();
+
+        let segments: [&[u8]; 2] = [&round_counter, label];
+        for seg in segments {
+            input
+                .try_extend_from_slice(seg)
+                .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
+        }
+
+        if let Some(ctx) = context {
             input
                 .try_push(0x00)
                 .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
             input
-                .try_extend_from_slice(context)
+                .try_extend_from_slice(ctx)
                 .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
         }
-        // NIST SP 800-108 Section 5.1 [L]_2 output length
+
         input
-            .try_extend_from_slice(&length_bits.to_le_bytes())
+            .try_extend_from_slice(&bit_len_repr)
             .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
 
         let result = aes.cmac(key, &input)?;

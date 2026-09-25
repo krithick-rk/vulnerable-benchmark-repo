@@ -78,16 +78,18 @@ impl StashMeasurementCmd {
         // so the SoC cannot forge the MCU RT measurement or steal its cached
         // context index via STASH_MEASUREMENT.
         let is_mcu_rt = metadata == &MCU_RT_RESERVED_FW_ID;
-        if is_mcu_rt && caliptra_managed_access == CaliptraManagedContextAccess::Denied {
-            return Err(CaliptraError::RUNTIME_STASH_MEASUREMENT_RESERVED_FW_ID);
+        match (is_mcu_rt, caliptra_managed_access) {
+            (true, CaliptraManagedContextAccess::Denied) => {
+                return Err(CaliptraError::RUNTIME_STASH_MEASUREMENT_RESERVED_FW_ID);
+            }
+            _ => (),
         }
 
         let dpe_result = {
             // Check for MCU FW ID and swap it's TCI type
-            let tci_type = if is_mcu_rt {
-                MCU_TCI_TYPE
-            } else {
-                u32::from_ne_bytes(*metadata)
+            let tci_type = match is_mcu_rt {
+                true => MCU_TCI_TYPE,
+                false => u32::from_ne_bytes(*metadata),
             };
 
             // Check that adding this measurement to DPE doesn't cause

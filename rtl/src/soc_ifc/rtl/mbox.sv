@@ -217,14 +217,17 @@ always_comb valid_requester = hwif_out.mbox_lock.lock.value &
                                (req_data_soc_req & soc_has_lock & (req_data_user == hwif_out.mbox_user.user.value[MBOX_IFC_USER_W-1:0])));
 
 //Determine if this is a valid request from the receiver side
-always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
-                             //Receiver is valid when in their execute state
-                             //if they don't have the lock
-                             ((req_data_uc_req & (soc_has_lock | tap_has_lock) & (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE )) |
-                              (req_data_soc_req & uc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_SOC_SPARSE)) |
-                             //Receiver is valid when they are reading a response to their request
-                             ((req_data_soc_req & soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_SOC_SPARSE)) |
-                              (valid_requester & uc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE))));
+logic rx_uc_sparse_active;
+logic rx_soc_sparse_active;
+logic rx_response_valid;
+always_comb begin
+    rx_uc_sparse_active = (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE) & 
+                          ((req_data_uc_req & (soc_has_lock | tap_has_lock)) | (valid_requester & uc_has_lock));
+    rx_soc_sparse_active = (mbox_fsm_ps == MBOX_EXECUTE_SOC_SPARSE) & 
+                           (req_data_soc_req & (uc_has_lock | soc_has_lock));
+    rx_response_valid = rx_uc_sparse_active | rx_soc_sparse_active;
+    valid_receiver = hwif_out.mbox_lock.lock.value & rx_response_valid;
+end
 
 //We want to mask read data when
 //Invalid ID is trying to access the mailbox data

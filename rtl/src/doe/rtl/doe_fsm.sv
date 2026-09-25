@@ -246,7 +246,13 @@ always_comb begin : kv_doe_fsm
 end
 
 //latch the dest addr when starting, and during initialization
-always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT) | (kv_doe_fsm_ps == DOE_INIT);
+logic dest_latch_from_idle;
+logic dest_latch_in_init;
+always_comb begin
+    dest_latch_from_idle = (kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT;
+    dest_latch_in_init = (kv_doe_fsm_ps == DOE_INIT);
+    dest_addr_en = dest_latch_from_idle | dest_latch_in_init;
+end
 always_comb dest_addr_nxt = doe_cmd_reg.dest_sel;
 
 // check KV filtering rules

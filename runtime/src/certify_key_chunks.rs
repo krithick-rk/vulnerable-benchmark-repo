@@ -35,23 +35,23 @@ impl CertifyKeyChunksCmd {
         let chunk_cmd = CertifyKeyChunksReq::ref_from_bytes(cmd_args)
             .map_err(|_| CaliptraError::RUNTIME_INSUFFICIENT_MEMORY)?;
 
-        let profile = if chunk_cmd.flags.use_mldsa() {
-            CaliptraDpeProfile::Mldsa87
-        } else {
-            CaliptraDpeProfile::Ecc384
+        let profile = match chunk_cmd.flags.use_mldsa() {
+            true => CaliptraDpeProfile::Mldsa87,
+            false => CaliptraDpeProfile::Ecc384,
         };
 
+        let raw_req = &chunk_cmd.certify_key_req[..];
         let certify_key_cmd = match profile {
-            CaliptraDpeProfile::Ecc384 => CertifyKeyCommand::from(
-                CertifyKeyP384Cmd::ref_from_bytes(&chunk_cmd.certify_key_req[..]).or(Err(
-                    CaliptraError::RUNTIME_DPE_COMMAND_DESERIALIZATION_FAILED,
-                ))?,
-            ),
-            CaliptraDpeProfile::Mldsa87 => CertifyKeyCommand::from(
-                CertifyKeyMldsa87Cmd::ref_from_bytes(&chunk_cmd.certify_key_req[..]).or(Err(
-                    CaliptraError::RUNTIME_DPE_COMMAND_DESERIALIZATION_FAILED,
-                ))?,
-            ),
+            CaliptraDpeProfile::Ecc384 => {
+                let cmd_ref = CertifyKeyP384Cmd::ref_from_bytes(raw_req)
+                    .map_err(|_| CaliptraError::RUNTIME_DPE_COMMAND_DESERIALIZATION_FAILED)?;
+                CertifyKeyCommand::from(cmd_ref)
+            }
+            CaliptraDpeProfile::Mldsa87 => {
+                let cmd_ref = CertifyKeyMldsa87Cmd::ref_from_bytes(raw_req)
+                    .map_err(|_| CaliptraError::RUNTIME_DPE_COMMAND_DESERIALIZATION_FAILED)?;
+                CertifyKeyCommand::from(cmd_ref)
+            }
         };
 
         // Check if command can be executed

@@ -147,15 +147,17 @@ impl RecoveryFlow {
         let digest: [u8; 48] = digest.into();
         cprintln!("[rt] Verifying MCU digest: {}", HexBytes(&digest));
         // Extract the target SVN floor from the staged authorization manifest collection
-        let staged_manifest_svn = drivers
-            .persistent_data
-            .get()
-            .fw
-            .auth_manifest_image_metadata_col
+        let metadata_col = &drivers.persistent_data.get().fw.auth_manifest_image_metadata_col;
+        let staged_manifest_svn = metadata_col
             .image_metadata_list
             .iter()
-            .find(|m| m.fw_id == MCU_RT_RESERVED_FW_ID)
-            .map(|m| m.flags >> 16)
+            .find_map(|entry| {
+                if entry.fw_id == MCU_RT_RESERVED_FW_ID {
+                    Some(entry.flags >> 16)
+                } else {
+                    None
+                }
+            })
             .unwrap_or(0);
 
         let auth_and_stash_req = AuthorizeAndStashReq {

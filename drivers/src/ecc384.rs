@@ -181,32 +181,27 @@ impl Ecc384 {
     // Check that `scalar` is in the range [1, n-1] for the P-384 curve
     fn scalar_range_check(scalar: &Ecc384Scalar) -> bool {
         // n-1 for The NIST P-384 curve
-        const SECP384_ORDER_MIN1: &[u32] = &[
+        const SECP384_ORDER_MIN1: [u32; 12] = [
             0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xc7634d81,
             0xf4372ddf, 0x581a0db2, 0x48b0a77a, 0xecec196a, 0xccc52972,
         ];
 
         // Multi-word subtraction to check scalar <= n-1
-        let mut borrow: u64 = 0;
-        for i in 0..12 {
-            let diff = (SECP384_ORDER_MIN1[i] as u64)
-                .wrapping_sub(scalar.0[i] as u64)
-                .wrapping_sub(borrow);
-            borrow = (diff >> 63) & 1;
-        }
-        if borrow != 0 {
+        let final_borrow = SECP384_ORDER_MIN1
+            .iter()
+            .zip(scalar.0.iter())
+            .fold(0u64, |borrow, (&limit_word, &scalar_word)| {
+                let diff = (limit_word as u64)
+                    .wrapping_sub(scalar_word as u64)
+                    .wrapping_sub(borrow);
+                (diff >> 63) & 1
+            });
+
+        if final_borrow != 0 {
             return false;
         }
 
-        // If scalar is non-zero, return true
-        for word in scalar.0 {
-            if word != 0 {
-                return true;
-            }
-        }
-
-        // scalar is zero
-        false
+        scalar.0.iter().any(|&word| word != 0)
     }
 
     // Wait on the provided condition OR the error condition defined in this function

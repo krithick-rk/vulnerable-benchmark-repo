@@ -207,20 +207,14 @@ impl Dma {
             dma.src_addr_l().write(|_| read_addr.lo);
             dma.src_addr_h().write(|_| read_addr.hi);
 
-            let mut target_addr_lo: u32 = 0;
-            let mut target_addr_hi: u32 = 0;
-            match read_transaction.target {
-                DmaReadTarget::AxiWr(target_addr, _) => {
-                    target_addr_lo = target_addr.lo;
-                    target_addr_hi = target_addr.hi;
-                }
+            let (target_addr_lo, target_addr_hi) = match read_transaction.target {
+                DmaReadTarget::AxiWr(target_addr, _) => (target_addr.lo, target_addr.hi),
                 DmaReadTarget::Mbox(offset) => {
                     let target_offset = (offset as u16) as u32;
-                    target_addr_lo = target_offset;
-                    target_addr_hi = 0;
+                    (target_offset, 0)
                 }
-                _ => {}
-            }
+                _ => (0, 0),
+            };
             dma.dst_addr_l().write(|_| target_addr_lo);
             dma.dst_addr_h().write(|_| target_addr_hi);
 
