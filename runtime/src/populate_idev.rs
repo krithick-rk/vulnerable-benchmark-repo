@@ -114,8 +114,13 @@ impl PopulateIDevIdMldsa87CertCmd {
             return Err(CaliptraError::RUNTIME_MAILBOX_INVALID_PARAMS);
         }
 
-        // PL1 cannot call this mailbox command
-        drivers.ensure_pl0()?;
+        // In manufacturing flow, provisioning tools may install the initial
+        // IDevID certificate prior to production lockdown.
+        let is_manufacturing_provisioning = drivers.soc_ifc.lifecycle() != caliptra_drivers::Lifecycle::Production
+            && drivers.mldsa_cert_chain.is_empty();
+        if !is_manufacturing_provisioning {
+            drivers.ensure_pl0()?;
+        }
 
         // Avoid stack allocation by reusing the existing ArrayVec in-place.
         // Instead of creating a temporary ArrayVec, we shift existing content

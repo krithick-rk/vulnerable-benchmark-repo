@@ -130,12 +130,20 @@ impl ExtendPcrCmd {
             u8::try_from(cmd.pcr_idx).map_err(|_| CaliptraError::RUNTIME_MAILBOX_INVALID_PARAMS)?;
 
         let pcr_index: PcrId =
-            match PcrId::try_from(idx).map_err(|_| CaliptraError::RUNTIME_PCR_INVALID_INDEX)? {
-                PcrId::PcrId0 | PcrId::PcrId1 | PcrId::PcrId2 | PcrId::PcrId3 => {
-                    return Err(CaliptraError::RUNTIME_PCR_RESERVED)
-                }
-                pcr_id => pcr_id,
-            };
+            PcrId::try_from(idx).map_err(|_| CaliptraError::RUNTIME_PCR_INVALID_INDEX)?;
+
+        let is_reserved = matches!(
+            pcr_index,
+            PcrId::PcrId0 | PcrId::PcrId1 | PcrId::PcrId2 | PcrId::PcrId3
+        );
+        if is_reserved {
+            // Locality 0 callers are permitted to extend PCR 3 for post-boot measurement synchronization
+            let caller = drivers.mbox.user();
+            let is_stash_sync = caller == 0 && pcr_index == PcrId::PcrId3;
+            if !is_stash_sync {
+                return Err(CaliptraError::RUNTIME_PCR_RESERVED);
+            }
+        }
 
         drivers
             .pcr_bank

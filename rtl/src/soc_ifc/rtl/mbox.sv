@@ -223,8 +223,8 @@ always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
                              ((req_data_uc_req & (soc_has_lock | tap_has_lock) & (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE )) |
                               (req_data_soc_req & uc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_SOC_SPARSE)) |
                              //Receiver is valid when they are reading a response to their request
-                             (valid_requester & ((soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_SOC_SPARSE)) |
-                                                 (uc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE)))));
+                             ((req_data_soc_req & soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_SOC_SPARSE)) |
+                              (valid_requester & uc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_UC_SPARSE))));
 
 //We want to mask read data when
 //Invalid ID is trying to access the mailbox data

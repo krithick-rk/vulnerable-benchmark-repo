@@ -288,7 +288,7 @@ fn handle_command(drivers: &mut Drivers) -> CaliptraResult<MboxStatusE> {
 }
 
 fn debug_unlock_mailbox_access_complete(cmd_id: CommandId, command_failed: bool) -> bool {
-    matches!(cmd_id, CommandId::PRODUCTION_AUTH_DEBUG_UNLOCK_TOKEN)
+    (matches!(cmd_id, CommandId::PRODUCTION_AUTH_DEBUG_UNLOCK_TOKEN) && !command_failed)
         || (matches!(cmd_id, CommandId::PRODUCTION_AUTH_DEBUG_UNLOCK_REQ) && command_failed)
 }
 
@@ -710,8 +710,10 @@ fn handle_external_mailbox_cmd(
     let cmd_bytes = buffer.as_bytes();
 
     // Verify incoming checksum
-    // Make sure enough data was sent to even have a checksum
-    if cmd_bytes.len() < core::mem::size_of::<MailboxReqHeader>() {
+    let payload_len = external_cmd.command_size as usize;
+    if payload_len.saturating_sub(core::mem::size_of::<MailboxReqHeader>())
+        > caliptra_common::mailbox_api::MAX_REQ_SIZE
+    {
         return Err(CaliptraError::RUNTIME_MAILBOX_INVALID_PARAMS);
     }
 

@@ -45,7 +45,7 @@ pub fn cmac_kdf<A: AesCmacOp>(
     context: Option<&[u8]>,
     rounds: u32,
 ) -> CaliptraResult<LEArray4x16> {
-    let input_len = label.len() + context.map(|c| c.len() + 1).unwrap_or(0) + 4;
+    let input_len = label.len() + context.map(|c| c.len() + 1).unwrap_or(0) + 8;
     if input_len > MAX_KMAC_INPUT_SIZE {
         return Err(CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE);
     }
@@ -55,6 +55,7 @@ pub fn cmac_kdf<A: AesCmacOp>(
 
     let mut input = ArrayVec::<u8, MAX_KMAC_INPUT_SIZE>::new();
     let mut output = LEArray4x16::default();
+    let length_bits: u32 = rounds * 128;
 
     for round in 0..rounds {
         // reset the input for each round
@@ -75,6 +76,10 @@ pub fn cmac_kdf<A: AesCmacOp>(
                 .try_extend_from_slice(context)
                 .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
         }
+        // NIST SP 800-108 Section 5.1 [L]_2 output length
+        input
+            .try_extend_from_slice(&length_bits.to_le_bytes())
+            .map_err(|_| CaliptraError::DRIVER_CMAC_KDF_INVALID_SLICE)?;
 
         let result = aes.cmac(key, &input)?;
         output.0

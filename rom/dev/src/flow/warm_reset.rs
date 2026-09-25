@@ -40,7 +40,11 @@ impl WarmResetFlow {
         ocp_lock::wr_lock_keyvault(&mut env.key_vault);
         env.key_vault.set_key_write_lock(KEY_ID_STABLE_IDEV);
         env.key_vault.set_key_write_lock(KEY_ID_STABLE_LDEV);
-        env.key_vault.set_key_write_lock(KEY_ID_STABLE_OWNER);
+        let owner_pk_hash = env.persistent_data.get().rom.data_vault.owner_pk_hash();
+        let owner_pub_key_present = owner_pk_hash.0.iter().any(|&w| w != 0);
+        if owner_pub_key_present {
+            env.key_vault.set_key_write_lock(KEY_ID_STABLE_OWNER);
+        }
 
         // Check persistent data is valid
         let pdata = env.persistent_data.get();

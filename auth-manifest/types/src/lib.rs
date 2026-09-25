@@ -118,7 +118,7 @@ impl AuthManifestPreamble {
 
     /// Returns `Range<u32>` containing the owner_pub_keys
     pub fn owner_pub_keys_range() -> Range<u32> {
-        let span = span_of!(AuthManifestPreamble, owner_pub_keys);
+        let span = span_of!(AuthManifestPreamble, owner_pub_keys.ecc_pub_key);
         span.start as u32..span.end as u32
     }
 

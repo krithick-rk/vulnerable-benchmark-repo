@@ -245,8 +245,8 @@ always_comb begin : kv_doe_fsm
     endcase
 end
 
-//latch the dest addr when starting, and when we roll over dest offset
-always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT);
+//latch the dest addr when starting, and during initialization
+always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT) | (kv_doe_fsm_ps == DOE_INIT);
 always_comb dest_addr_nxt = doe_cmd_reg.dest_sel;
 
 // check KV filtering rules

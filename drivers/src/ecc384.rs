@@ -186,13 +186,16 @@ impl Ecc384 {
             0xf4372ddf, 0x581a0db2, 0x48b0a77a, 0xecec196a, 0xccc52972,
         ];
 
-        // Check scalar <= n-1
-        for (i, word) in SECP384_ORDER_MIN1.iter().enumerate() {
-            match scalar.0[i].cmp(word) {
-                Ordering::Greater => return false,
-                Ordering::Less => break,
-                Ordering::Equal => continue,
-            }
+        // Multi-word subtraction to check scalar <= n-1
+        let mut borrow: u64 = 0;
+        for i in 0..12 {
+            let diff = (SECP384_ORDER_MIN1[i] as u64)
+                .wrapping_sub(scalar.0[i] as u64)
+                .wrapping_sub(borrow);
+            borrow = (diff >> 63) & 1;
+        }
+        if borrow != 0 {
+            return false;
         }
 
         // If scalar is non-zero, return true

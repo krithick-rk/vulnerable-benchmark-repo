@@ -215,7 +215,8 @@ impl Dma {
                     target_addr_hi = target_addr.hi;
                 }
                 DmaReadTarget::Mbox(offset) => {
-                    target_addr_lo = offset;
+                    let target_offset = (offset as u16) as u32;
+                    target_addr_lo = target_offset;
                     target_addr_hi = 0;
                 }
                 _ => {}

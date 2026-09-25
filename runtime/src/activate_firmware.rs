@@ -201,7 +201,7 @@ impl ActivateFirmwareCmd {
             // If MCU image is being activated, set the RESET_REASON first before clearing the FW_EXEC_CTRL
             // to ensure the correct reset reason is captured after the reset.
             drivers.persistent_data.get_mut().fw.mcu_firmware_loaded =
-                McuFwStatus::HitlessUpdateStarted.into();
+                McuFwStatus::Loaded.into();
             Drivers::set_mcu_reset_reason(drivers, McuResetReason::FwHitlessUpd);
         } else if mcu_activate_requested && initial_activate {
             // Tell MCI to record this as a firmware-boot reset (bit

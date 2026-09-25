@@ -146,15 +146,25 @@ impl RecoveryFlow {
 
         let digest: [u8; 48] = digest.into();
         cprintln!("[rt] Verifying MCU digest: {}", HexBytes(&digest));
-        // verify the digest
-        let soc_manifest_svn = drivers.persistent_data.get().fw.dpe.soc_manifest_svn;
+        // Extract the target SVN floor from the staged authorization manifest collection
+        let staged_manifest_svn = drivers
+            .persistent_data
+            .get()
+            .fw
+            .auth_manifest_image_metadata_col
+            .image_metadata_list
+            .iter()
+            .find(|m| m.fw_id == MCU_RT_RESERVED_FW_ID)
+            .map(|m| m.flags >> 16)
+            .unwrap_or(0);
+
         let auth_and_stash_req = AuthorizeAndStashReq {
             fw_id: MCU_RT_RESERVED_FW_ID,
             measurement: digest,
             source: ImageHashSource::InRequest.into(),
             // We want to make sure this measurement is not skipped.
             flags: 0,
-            svn: soc_manifest_svn,
+            svn: staged_manifest_svn,
             ..Default::default()
         };
 

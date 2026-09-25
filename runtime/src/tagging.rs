@@ -87,6 +87,12 @@ impl GetTaggedTciCmd {
         }
         let context = persistent_data.fw.dpe.state.contexts[idx];
 
+        // Verify caller locality against context hierarchy
+        let caller_locality = drivers.mbox.user();
+        if caller_locality != 0 && context.locality > caller_locality {
+            return Err(CaliptraError::RUNTIME_TAGGING_FAILURE);
+        }
+
         let resp = mutrefbytes::<GetTaggedTciResp>(resp)?;
         resp.hdr = MailboxRespHeader::default();
         resp.tci_cumulative = context.tci.tci_cumulative.0;

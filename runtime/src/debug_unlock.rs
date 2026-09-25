@@ -144,14 +144,17 @@ impl ProductionDebugUnlock {
             Ok(()) => {
                 soc_ifc.set_ss_dbg_unlock_level(request.unlock_level);
                 soc_ifc.set_ss_dbg_unlock_result(true);
+                soc_ifc.set_ss_dbg_unlock_in_progress(false);
                 Ok(0)
             }
             Err(e) => {
                 soc_ifc.set_ss_dbg_unlock_result(false);
+                // Retain session challenge and request to permit retry attempt
+                self.last_challenge = Some(challenge);
+                self.last_request = Some(request);
                 Err(e)
             }
         };
-        soc_ifc.set_ss_dbg_unlock_in_progress(false);
         ret
     }
 }

@@ -264,7 +264,7 @@ module soc_ifc_reg (
             decoded_reg_strb.CPTRA_MBOX_AXI_USER_LOCK[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c + i0*12'h4);
         end
         decoded_reg_strb.CPTRA_TRNG_VALID_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h70);
-        decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK = cpuif_req_masked & (cpuif_addr == 12'h74);
+        decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK = cpuif_req_masked & ((cpuif_addr & 12'h0FF) == 12'h74);
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.CPTRA_TRNG_DATA[i0] = cpuif_req_masked & (cpuif_addr == 12'h78 + i0*12'h4);
         end

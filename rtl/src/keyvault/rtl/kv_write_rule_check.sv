@@ -62,10 +62,8 @@ import kv_defines_pkg::*;
     //   THEN (dest = [LOCK region])
     always_comb begin
         rule_fail.lock_to_lock = write_metrics.ocp_lock_in_progress &&
-                               ((write_metrics.kv_data0_present &&
-                                 write_metrics.kv_data0_entry   inside {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]}) ||
-                                (write_metrics.kv_data1_present &&
-                                 write_metrics.kv_data1_entry   inside {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]})) &&
+                                (write_metrics.kv_data0_present &&
+                                 write_metrics.kv_data0_entry inside {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]}) &&
                                !(write_metrics.kv_write_entry inside {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]});
     end
 
